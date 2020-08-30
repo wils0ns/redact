@@ -12,9 +12,6 @@ type Inquiry struct {
 	SecretKeys   []string
 }
 
-// TODO AddSecretValue
-// TODO AddSecretKey
-
 // AddSecretValue adds a Secret definition to redact inquiry values
 func (inq *Inquiry) AddSecretValue(s *Secret) {
 	inq.SecretValues = append(inq.SecretValues, s)
