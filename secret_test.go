@@ -26,7 +26,7 @@ func TestSecretRedact(t *testing.T) {
 			},
 		},
 		{
-			secret: NewSecret("[0-9]", OmitData, []byte("<REDACTED>")),
+			secret: NewSecret("[0-9]", ReplaceData, []byte("<REDACTED>")),
 			data: [][]string{
 				{"123", "<REDACTED>"},
 				{"a1b2c3", "<REDACTED>"},
