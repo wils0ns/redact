@@ -1,4 +1,4 @@
-package redacting
+package redact
 
 import (
 	"encoding/json"

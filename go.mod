@@ -1,4 +1,4 @@
-module github.com/wils0ns/redacting
+module github.com/wils0ns/redact
 
 go 1.15
 
