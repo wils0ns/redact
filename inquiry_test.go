@@ -59,7 +59,7 @@ func TestInquiryRedact(t *testing.T) {
 	inq := New()
 	inq.AddSecretValue(NewSecret("secret", BlackOut, []byte("#")))
 	inq.AddSecretValue(NewSecret("Wilson", Censor, []byte("#REDACTED#")))
-	inq.AddSecretValue(NewSecret("omitted", OmitData, []byte("")))
+	inq.AddSecretValue(NewSecret("omitted", ReplaceData, []byte("")))
 	inq.AddSecretField("address")
 	inq.AddSecretField("date")
 

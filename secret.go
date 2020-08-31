@@ -14,8 +14,8 @@ const (
 	BlackOut Protection = iota
 	// Censor protects by censoring the whole secret with a replacement
 	Censor
-	// OmitData protects by replacing the whole data
-	OmitData
+	// ReplaceData protects by replacing the whole data
+	ReplaceData
 )
 
 // Secret defines what parts of a string most be redacted and how
@@ -52,7 +52,7 @@ func (s *Secret) Redact(data []byte) []byte {
 			)
 		case Censor:
 			return s.Pattern.ReplaceAll(data, s.Replacement)
-		case OmitData:
+		case ReplaceData:
 			return s.Replacement
 		}
 	}

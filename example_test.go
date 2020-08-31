@@ -16,9 +16,9 @@ func ExampleSecret_Redact() {
 	s = NewSecret(`[0-9]{3}\.[0-9]{3}\.[0-9]{3}-[0-9]{2}`, BlackOut, []byte("█"))
 	fmt.Println(string(s.Redact(data)))
 
-	// OmitData example
+	// ReplaceData example
 	data = []byte("Something about the government")
-	s = NewSecret("government", OmitData, []byte("Text about flowers"))
+	s = NewSecret("government", ReplaceData, []byte("Text about flowers"))
 	fmt.Println(string(s.Redact(data)))
 
 	// Output:
