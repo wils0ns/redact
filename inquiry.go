@@ -4,15 +4,21 @@ import (
 	"bytes"
 	"encoding/json"
 	"reflect"
+	"regexp"
 )
 
 // Inquiry provide ways to request data considering what needs to remain secret
 type Inquiry struct {
-	SecretValues []*Secret
-	SecretFields []string
+	SecretValues        []*Secret
+	secretFieldPatterns []*regexp.Regexp
 }
 
-// AddSecretValue adds a Secret definition to redact inquiry values
+// New creates an empty inquiry
+func New() *Inquiry {
+	return &Inquiry{}
+}
+
+// AddSecretValue adds a Secret definition to redact data values
 func (inq *Inquiry) AddSecretValue(s *Secret) {
 	inq.SecretValues = append(inq.SecretValues, s)
 }
@@ -29,16 +35,29 @@ func (inq *Inquiry) redactValue(data []byte) []byte {
 	return redacted
 }
 
+// AddSecretField adds a secret field regexp patterns to redact maps by key.
+// Map keys are redacted by deleting the key-value pair entirely
+func (inq *Inquiry) AddSecretField(f string) error {
+	re, err := regexp.Compile(f)
+	if err != nil {
+		return err
+	}
+	inq.secretFieldPatterns = append(inq.secretFieldPatterns, re)
+	return nil
+}
+
+// isSecretField checks if string matches on of the secret fields
 func (inq *Inquiry) isSecretField(f string) bool {
-	for _, sf := range inq.SecretFields {
-		if f == sf {
+	for _, sf := range inq.secretFieldPatterns {
+		if sf.Match([]byte(f)) {
 			return true
 		}
 	}
 	return false
 }
 
-func (inq *Inquiry) walk(copy, original reflect.Value) {
+// redact visits all fields of an object checking for secrets
+func (inq *Inquiry) redact(copy, original reflect.Value) {
 	switch original.Kind() {
 	case reflect.Ptr:
 		originalValue := original.Elem()
@@ -46,23 +65,23 @@ func (inq *Inquiry) walk(copy, original reflect.Value) {
 			return
 		}
 		copy.Set(reflect.New(originalValue.Type()))
-		inq.walk(copy.Elem(), originalValue)
+		inq.redact(copy.Elem(), originalValue)
 
 	case reflect.Interface:
 		originalValue := original.Elem()
 		copyValue := reflect.New(originalValue.Type()).Elem()
-		inq.walk(copyValue, originalValue)
+		inq.redact(copyValue, originalValue)
 		copy.Set(copyValue)
 
 	case reflect.Struct:
 		for i := 0; i < original.NumField(); i++ {
-			inq.walk(copy.Field(i), original.Field(i))
+			inq.redact(copy.Field(i), original.Field(i))
 		}
 
 	case reflect.Slice:
 		copy.Set(reflect.MakeSlice(original.Type(), original.Len(), original.Cap()))
 		for i := 0; i < original.Len(); i++ {
-			inq.walk(copy.Index(i), original.Index(i))
+			inq.redact(copy.Index(i), original.Index(i))
 		}
 
 	case reflect.Map:
@@ -73,7 +92,7 @@ func (inq *Inquiry) walk(copy, original reflect.Value) {
 			}
 			originalValue := original.MapIndex(key)
 			copyValue := reflect.New(originalValue.Type()).Elem()
-			inq.walk(copyValue, originalValue)
+			inq.redact(copyValue, originalValue)
 			copy.SetMapIndex(key, copyValue)
 		}
 
@@ -96,6 +115,6 @@ func (inq *Inquiry) Redact(data []byte) ([]byte, error) {
 	}
 	original := reflect.ValueOf(structData)
 	copy := reflect.New(original.Type()).Elem()
-	inq.walk(copy, original)
+	inq.redact(copy, original)
 	return json.Marshal(copy.Interface())
 }

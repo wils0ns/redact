@@ -12,6 +12,7 @@ func TestInquiryRedact(t *testing.T) {
 	samples := []struct {
 		original, expected string
 	}{
+		{"", ""},
 		{"secret Wilson", "###### #REDACTED#"},
 		{
 			"This is the secret in the text and it belongs to Wilson",
@@ -55,11 +56,12 @@ func TestInquiryRedact(t *testing.T) {
 		},
 	}
 
-	inq := &Inquiry{}
+	inq := New()
 	inq.AddSecretValue(NewSecret("secret", BlackOut, []byte("#")))
 	inq.AddSecretValue(NewSecret("Wilson", Censor, []byte("#REDACTED#")))
 	inq.AddSecretValue(NewSecret("omitted", OmitData, []byte("")))
-	inq.SecretFields = []string{"address", "date"}
+	inq.AddSecretField("address")
+	inq.AddSecretField("date")
 
 	for _, s := range samples {
 		actual, err := inq.Redact([]byte(s.original))

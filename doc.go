@@ -1,2 +1,2 @@
-// Package redact provides ways to redact JSON strings
+// Package redact provides ways to redact JSON and text
 package redact
