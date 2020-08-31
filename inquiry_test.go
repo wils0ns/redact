@@ -7,41 +7,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInquiryRedactValue(t *testing.T) {
-
-	samples := []struct {
-		original, expected string
-	}{
-		{
-			"This is the secret in the text and it belongs to Wilson",
-			"This is the ██████ in the text and it belongs to #REDACTED#",
-		},
-		{
-			"This text makes no sense without the secret and should be omitted",
-			"",
-		},
-	}
-
-	inq := &Inquiry{}
-	inq.AddSecretValue(NewSecret("secret", BlackOut, []byte("█")))
-	inq.AddSecretValue(NewSecret("Wilson", Censor, []byte("#REDACTED#")))
-	inq.AddSecretValue(NewSecret("omitted", OmitData, []byte("")))
-
-	for _, s := range samples {
-		redacted, err := inq.Redact([]byte(s.original))
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.Equal(t, []byte(s.expected), redacted)
-	}
-}
-
-func TestInquiryRedactData(t *testing.T) {
+func TestInquiryRedact(t *testing.T) {
 
 	samples := []struct {
 		original, expected string
 	}{
 		{"secret Wilson", "###### #REDACTED#"},
+		{
+			"This is the secret in the text and it belongs to Wilson",
+			"This is the ###### in the text and it belongs to #REDACTED#",
+		},
+		{
+			"This text makes no sense without the secret and should be omitted",
+			"",
+		},
 		{
 			`{
 	"name": "Wilson",
@@ -79,6 +58,7 @@ func TestInquiryRedactData(t *testing.T) {
 	inq := &Inquiry{}
 	inq.AddSecretValue(NewSecret("secret", BlackOut, []byte("#")))
 	inq.AddSecretValue(NewSecret("Wilson", Censor, []byte("#REDACTED#")))
+	inq.AddSecretValue(NewSecret("omitted", OmitData, []byte("")))
 	inq.SecretFields = []string{"address", "date"}
 
 	for _, s := range samples {
