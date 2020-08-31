@@ -9,7 +9,7 @@ import (
 // Inquiry provide ways to request data considering what needs to remain secret
 type Inquiry struct {
 	SecretValues []*Secret
-	SecretKeys   []string
+	SecretFields []string
 }
 
 // AddSecretValue adds a Secret definition to redact inquiry values
@@ -18,7 +18,7 @@ func (inq *Inquiry) AddSecretValue(s *Secret) {
 }
 
 // RedactValue redacts a value based on all Inquiry.SecretValues
-func (inq *Inquiry) RedactValue(data []byte) []byte {
+func (inq *Inquiry) redactValue(data []byte) []byte {
 	redacted := data
 	for _, s := range inq.SecretValues {
 		if bytes.Compare(redacted, []byte("")) == 0 {
@@ -29,9 +29,9 @@ func (inq *Inquiry) RedactValue(data []byte) []byte {
 	return redacted
 }
 
-func (inq *Inquiry) isSecretKey(k string) bool {
-	for _, sk := range inq.SecretKeys {
-		if k == sk {
+func (inq *Inquiry) isSecretField(f string) bool {
+	for _, sf := range inq.SecretFields {
+		if f == sf {
 			return true
 		}
 	}
@@ -68,7 +68,7 @@ func (inq *Inquiry) walk(copy, original reflect.Value) {
 	case reflect.Map:
 		copy.Set(reflect.MakeMap(original.Type()))
 		for _, key := range original.MapKeys() {
-			if inq.isSecretKey(key.Interface().(string)) {
+			if inq.isSecretField(key.Interface().(string)) {
 				continue
 			}
 			originalValue := original.MapIndex(key)
@@ -78,7 +78,7 @@ func (inq *Inquiry) walk(copy, original reflect.Value) {
 		}
 
 	case reflect.String:
-		redacted := inq.RedactValue([]byte(original.Interface().(string)))
+		redacted := inq.redactValue([]byte(original.Interface().(string)))
 		copy.SetString(string(redacted))
 
 	default:
@@ -87,12 +87,12 @@ func (inq *Inquiry) walk(copy, original reflect.Value) {
 
 }
 
-// RedactData redacts the inquired data
-func (inq *Inquiry) RedactData(data []byte) ([]byte, error) {
+// Redact redacts the inquired data
+func (inq *Inquiry) Redact(data []byte) ([]byte, error) {
 	var structData interface{}
 	err := json.Unmarshal(data, &structData)
 	if err != nil {
-		return inq.RedactValue(data), nil
+		return inq.redactValue(data), nil
 	}
 	original := reflect.ValueOf(structData)
 	copy := reflect.New(original.Type()).Elem()

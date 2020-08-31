@@ -14,7 +14,7 @@ func TestInquiryRedactValue(t *testing.T) {
 	}{
 		{
 			"This is the secret in the text and it belongs to Wilson",
-			"This is the ###### in the text and it belongs to #REDACTED#",
+			"This is the ██████ in the text and it belongs to #REDACTED#",
 		},
 		{
 			"This text makes no sense without the secret and should be omitted",
@@ -23,12 +23,16 @@ func TestInquiryRedactValue(t *testing.T) {
 	}
 
 	inq := &Inquiry{}
-	inq.AddSecretValue(NewSecret("secret", BlackOut, []byte("#")))
+	inq.AddSecretValue(NewSecret("secret", BlackOut, []byte("█")))
 	inq.AddSecretValue(NewSecret("Wilson", Censor, []byte("#REDACTED#")))
 	inq.AddSecretValue(NewSecret("omitted", OmitData, []byte("")))
 
 	for _, s := range samples {
-		assert.Equal(t, []byte(s.expected), inq.RedactValue([]byte(s.original)))
+		redacted, err := inq.Redact([]byte(s.original))
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, []byte(s.expected), redacted)
 	}
 }
 
@@ -37,7 +41,7 @@ func TestInquiryRedactData(t *testing.T) {
 	samples := []struct {
 		original, expected string
 	}{
-		{"secret", "######"},
+		{"secret Wilson", "###### #REDACTED#"},
 		{
 			`{
 	"name": "Wilson",
@@ -75,10 +79,10 @@ func TestInquiryRedactData(t *testing.T) {
 	inq := &Inquiry{}
 	inq.AddSecretValue(NewSecret("secret", BlackOut, []byte("#")))
 	inq.AddSecretValue(NewSecret("Wilson", Censor, []byte("#REDACTED#")))
-	inq.SecretKeys = []string{"address", "date"}
+	inq.SecretFields = []string{"address", "date"}
 
 	for _, s := range samples {
-		actual, err := inq.RedactData([]byte(s.original))
+		actual, err := inq.Redact([]byte(s.original))
 		if err != nil {
 			t.Error(err)
 		}

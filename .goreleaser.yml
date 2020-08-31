@@ -1,0 +1,14 @@
+# builds:
+#   - binary: redact
+#     goos:
+#       - darwin
+#       - linux
+#       - windows
+#     goarch:
+#       - amd64
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
