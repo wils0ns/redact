@@ -1,5 +1,9 @@
 # Redact
 
+[![GoDoc](https://img.shields.io/badge/go-docs-blue.svg)](http://godoc.org/github.com/wils0ns/redact)
+[![Go Report Card](https://goreportcard.com/badge/github.com/wils0ns/redact)](https://goreportcard.com/report/github.com/wils0ns/redact)
+[![Codecov](https://img.shields.io/codecov/c/github/wils0ns/redact.svg)](https://codecov.io/gh/wils0ns/redact)
+
 JSON and text redactor.
 
 ## Blackout secrets in a text
